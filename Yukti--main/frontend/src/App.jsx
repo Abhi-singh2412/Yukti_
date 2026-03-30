@@ -8,6 +8,7 @@ import RequestFood from './pages/RequestFood';
 import RequestDonation from './pages/RequestDonation';
 import FulfillRequest from './pages/FulfillRequest';
 import Auth from './pages/Auth';
+import Dashboard from './pages/Dashboard';
 
 function App() {
     return (
@@ -20,6 +21,7 @@ function App() {
                     <Route path="/request-donation" element={<RequestDonation />} />
                     <Route path="/fulfill-request" element={<FulfillRequest />} />
                     <Route path="/receive" element={<Receive />} />
+                    <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/auth" element={<Auth />} />
                 </Routes>
             </Router>

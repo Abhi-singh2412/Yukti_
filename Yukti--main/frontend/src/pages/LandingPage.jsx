@@ -1,6 +1,7 @@
 import React from 'react';
 import Navbar from '../components/Navbar';
 import Hero from '../components/Hero';
+import LiveStats from '../components/LiveStats';
 import About from '../components/About';
 import Features from '../components/Features';
 import HowItWorks from '../components/HowItWorks';
@@ -12,6 +13,7 @@ const LandingPage = () => {
         <div>
             <Navbar />
             <Hero />
+            <LiveStats />
             <About />
             <Features />
             <HowItWorks />
