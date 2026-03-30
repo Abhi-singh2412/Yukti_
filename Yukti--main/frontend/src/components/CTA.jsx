@@ -39,7 +39,7 @@ const CTA = () => {
                     </div>
                     <div className="cta-right">
                         <div className="cta-image-wrapper">
-                            <img src="https://images.unsplash.com/photo-1617953141905-b27fb1f79ebc?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxpbmRpYW4lMjBoYW5kcyUyMGhvbGRpbmclMjBmb29kfGVufDF8fHx8MTc2MzkwNTI5NHww&ixlib=rb-4.1.0&q=80&w=1080"
+                            <img src="https://images.pexels.com/photos/6995201/pexels-photo-6995201.jpeg?auto=compress&cs=tinysrgb&w=1080"
                                 alt="Hands sharing food in community" className="cta-image" />
                             <div className="cta-decoration"></div>
                         </div>
