@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import api from '../api';
 
 const RequestDonation = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const donation = location.state?.donation;
 
+    const [error, setError] = useState('');
     const [formData, setFormData] = useState({
         message: '',
         contactNumber: '',
@@ -35,13 +37,14 @@ const RequestDonation = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setError('');
         try {
-            console.log('Donation request submitted:', { donationId: donation.id, ...formData });
+            // Update donation status to "Requested"
+            await api.put(`/api/donations/${donation._id}/status`, { status: 'Requested' });
             alert('Your request for this donation has been sent to the donor!');
             navigate('/receive');
-        } catch (error) {
-            console.error(error);
-            alert('Error submitting request');
+        } catch (err) {
+            setError(err.response?.data?.msg || 'Error submitting request. Please ensure you are logged in.');
         }
     };
 
@@ -55,9 +58,11 @@ const RequestDonation = () => {
                 </div>
 
                 <div style={{ maxWidth: '600px', margin: '0 auto', background: 'white', padding: '40px', borderRadius: '20px', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }}>
+                    {error && <p style={{ color: 'red', textAlign: 'center', marginBottom: '15px' }}>{error}</p>}
+                    
                     {/* Donation Summary */}
                     <div style={{ marginBottom: '30px', padding: '20px', background: '#f8f9fa', borderRadius: '12px', border: '1px solid #e9ecef' }}>
-                        <h4 style={{ margin: '0 0 10px 0', color: '#ff6b35' }}>{donation.food}</h4>
+                        <h4 style={{ margin: '0 0 10px 0', color: '#ff6b35' }}>{donation.title || donation.food}</h4>
                         <p style={{ margin: '5px 0', fontSize: '14px', color: '#4a4a68' }}><i className="fas fa-box-open" style={{ width: '20px' }}></i> Available: {donation.quantity}</p>
                         <p style={{ margin: '5px 0', fontSize: '14px', color: '#4a4a68' }}><i className="fas fa-map-marker-alt" style={{ width: '20px' }}></i> Location: {donation.location}</p>
                     </div>

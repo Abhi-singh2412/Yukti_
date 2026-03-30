@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import api from '../api';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
@@ -9,18 +10,31 @@ const Receive = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [locationFilter, setLocationFilter] = useState('');
 
-    // Mock data for donations
-    const [donations] = useState([
-        { id: 1, food: 'Rice and Dal', quantity: '10 servings', location: 'Mumbai, Andheri', time: '2 hours ago' },
-        { id: 2, food: 'Fresh Vegetables', quantity: '2 kg', location: 'Mumbai, Bandra', time: '4 hours ago' },
-        { id: 3, food: 'Bread Packets', quantity: '15 packets', location: 'Delhi, CP', time: '1 hour ago' },
-    ]);
+    // Real data for donations
+    const [donations, setDonations] = useState([]);
+    // Real data for requests
+    const [requests, setRequests] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    // Mock data for requests
-    const [requests] = useState([
-        { id: 1, title: 'Need Rice and Dal', quantity: '50 servings', location: 'Delhi, South Ext', time: '30 mins ago', desc: 'Orphanage dinner' },
-        { id: 2, title: 'Urgent Wheat/Flour', quantity: '10 kg', location: 'Mumbai, Dharavi', time: '3 hours ago', desc: 'Community kitchen running out' },
-    ]);
+    useEffect(() => {
+        const fetchData = async () => {
+            setLoading(true);
+            try {
+                // Fetch both concurrently
+                const [donationsRes, requestsRes] = await Promise.all([
+                    api.get('/api/donations'),
+                    api.get('/api/requests')
+                ]);
+                setDonations(donationsRes.data);
+                setRequests(requestsRes.data);
+            } catch (err) {
+                console.error("Failed to fetch data:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchData();
+    }, []);
 
     return (
         <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -73,62 +87,70 @@ const Receive = () => {
                     </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '30px' }}>
-                    {activeTab === 'donations' && donations
-                        .filter(item => item.food.toLowerCase().includes(searchTerm.toLowerCase()) && item.location.toLowerCase().includes(locationFilter.toLowerCase()))
-                        .map(item => (
-                        <div key={item.id} style={{ background: 'white', padding: '25px', borderRadius: '20px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', border: '1px solid #f0f0f0' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '15px' }}>
-                                <div style={{ width: '50px', height: '50px', background: '#fff5f2', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ff6b35', fontSize: '20px' }}>
-                                    <i className="fas fa-utensils"></i>
+                {loading ? (
+                    <div style={{ textAlign: 'center', padding: '50px 0' }}>Loading data...</div>
+                ) : (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '30px' }}>
+                        {activeTab === 'donations' && donations
+                            .filter(item => (item.title || item.food || '').toLowerCase().includes(searchTerm.toLowerCase()) && item.location.toLowerCase().includes(locationFilter.toLowerCase()))
+                            .map(item => (
+                            <div key={item._id || item.id} style={{ background: 'white', padding: '25px', borderRadius: '20px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', border: '1px solid #f0f0f0' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '15px' }}>
+                                    <div style={{ width: '50px', height: '50px', background: '#fff5f2', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ff6b35', fontSize: '20px' }}>
+                                        <i className="fas fa-utensils"></i>
+                                    </div>
+                                    <div>
+                                        <h3 style={{ fontSize: '18px', fontWeight: 'bold', margin: 0 }}>{item.title || item.food}</h3>
+                                        <p style={{ fontSize: '14px', color: '#6b6b8c', margin: 0 }}>
+                                            {item.date ? new Date(item.date).toLocaleDateString() : item.time}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h3 style={{ fontSize: '18px', fontWeight: 'bold', margin: 0 }}>{item.food}</h3>
-                                    <p style={{ fontSize: '14px', color: '#6b6b8c', margin: 0 }}>{item.time}</p>
+                                <div style={{ marginBottom: '20px' }}>
+                                    <p style={{ margin: '5px 0', fontSize: '14px', color: '#4a4a68' }}><i className="fas fa-box-open" style={{ width: '20px', color: '#ff6b35' }}></i> {item.quantity}</p>
+                                    <p style={{ margin: '5px 0', fontSize: '14px', color: '#4a4a68' }}><i className="fas fa-map-marker-alt" style={{ width: '20px', color: '#ff6b35' }}></i> {item.location}</p>
                                 </div>
+                                <button 
+                                    onClick={() => navigate('/request-donation', { state: { donation: item } })}
+                                    className="btn btn-secondary" 
+                                    style={{ width: '100%', justifyContent: 'center', fontSize: '14px' }}
+                                >
+                                    Request This
+                                </button>
                             </div>
-                            <div style={{ marginBottom: '20px' }}>
-                                <p style={{ margin: '5px 0', fontSize: '14px', color: '#4a4a68' }}><i className="fas fa-box-open" style={{ width: '20px', color: '#ff6b35' }}></i> {item.quantity}</p>
-                                <p style={{ margin: '5px 0', fontSize: '14px', color: '#4a4a68' }}><i className="fas fa-map-marker-alt" style={{ width: '20px', color: '#ff6b35' }}></i> {item.location}</p>
-                            </div>
-                            <button 
-                                onClick={() => navigate('/request-donation', { state: { donation: item } })}
-                                className="btn btn-secondary" 
-                                style={{ width: '100%', justifyContent: 'center', fontSize: '14px' }}
-                            >
-                                Request This
-                            </button>
-                        </div>
-                    ))}
+                        ))}
 
-                    {activeTab === 'requests' && requests
-                        .filter(item => item.title.toLowerCase().includes(searchTerm.toLowerCase()) && item.location.toLowerCase().includes(locationFilter.toLowerCase()))
-                        .map(item => (
-                        <div key={item.id} style={{ background: 'white', padding: '25px', borderRadius: '20px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', border: '1px solid #f0f0f0' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '15px' }}>
-                                <div style={{ width: '50px', height: '50px', background: '#f2f6ff', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3571ff', fontSize: '20px' }}>
-                                    <i className="fas fa-hand-holding-heart"></i>
+                        {activeTab === 'requests' && requests
+                            .filter(item => (item.title || '').toLowerCase().includes(searchTerm.toLowerCase()) && item.location.toLowerCase().includes(locationFilter.toLowerCase()))
+                            .map(item => (
+                            <div key={item._id || item.id} style={{ background: 'white', padding: '25px', borderRadius: '20px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', border: '1px solid #f0f0f0' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '15px' }}>
+                                    <div style={{ width: '50px', height: '50px', background: '#f2f6ff', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3571ff', fontSize: '20px' }}>
+                                        <i className="fas fa-hand-holding-heart"></i>
+                                    </div>
+                                    <div>
+                                        <h3 style={{ fontSize: '18px', fontWeight: 'bold', margin: 0 }}>{item.title}</h3>
+                                        <p style={{ fontSize: '14px', color: '#6b6b8c', margin: 0 }}>
+                                            {item.date ? new Date(item.date).toLocaleDateString() : item.time}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h3 style={{ fontSize: '18px', fontWeight: 'bold', margin: 0 }}>{item.title}</h3>
-                                    <p style={{ fontSize: '14px', color: '#6b6b8c', margin: 0 }}>{item.time}</p>
+                                <div style={{ marginBottom: '20px' }}>
+                                    <p style={{ margin: '5px 0', fontSize: '14px', color: '#4a4a68' }}><i className="fas fa-info-circle" style={{ width: '20px', color: '#3571ff' }}></i> {item.description || item.desc}</p>
+                                    <p style={{ margin: '5px 0', fontSize: '14px', color: '#4a4a68' }}><i className="fas fa-box-open" style={{ width: '20px', color: '#3571ff' }}></i> {item.quantityNeeded || item.quantity}</p>
+                                    <p style={{ margin: '5px 0', fontSize: '14px', color: '#4a4a68' }}><i className="fas fa-map-marker-alt" style={{ width: '20px', color: '#3571ff' }}></i> {item.location}</p>
                                 </div>
+                                <button 
+                                    onClick={() => navigate('/fulfill-request', { state: { request: item } })}
+                                    className="btn btn-primary" 
+                                    style={{ width: '100%', justifyContent: 'center', fontSize: '14px' }}
+                                >
+                                    Fulfill Request
+                                </button>
                             </div>
-                            <div style={{ marginBottom: '20px' }}>
-                                <p style={{ margin: '5px 0', fontSize: '14px', color: '#4a4a68' }}><i className="fas fa-info-circle" style={{ width: '20px', color: '#3571ff' }}></i> {item.desc}</p>
-                                <p style={{ margin: '5px 0', fontSize: '14px', color: '#4a4a68' }}><i className="fas fa-box-open" style={{ width: '20px', color: '#3571ff' }}></i> {item.quantity}</p>
-                                <p style={{ margin: '5px 0', fontSize: '14px', color: '#4a4a68' }}><i className="fas fa-map-marker-alt" style={{ width: '20px', color: '#3571ff' }}></i> {item.location}</p>
-                            </div>
-                            <button 
-                                onClick={() => navigate('/fulfill-request', { state: { request: item } })}
-                                className="btn btn-primary" 
-                                style={{ width: '100%', justifyContent: 'center', fontSize: '14px' }}
-                            >
-                                Fulfill Request
-                            </button>
-                        </div>
-                    ))}
-                </div>
+                        ))}
+                    </div>
+                )}
             </div>
             <Footer />
         </div>

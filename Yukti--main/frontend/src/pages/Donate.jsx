@@ -1,25 +1,42 @@
 import React, { useState } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import api from '../api';
 
 const Donate = () => {
     const [formData, setFormData] = useState({
-        foodType: '',
+        title: '', // Changed from foodType
         quantity: '',
         location: '',
-        expiryTime: '',
-        contact: ''
+        expiryDate: '', // Changed from expiryTime
+        donorPhone: '', // Changed from contact
+        description: '' // Added missing backend field
     });
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        alert('Thank you for your donation! We will connect you shortly.');
-        // Here you would send data to backend
-        console.log(formData);
+        setError('');
+        setSuccess('');
+        try {
+            await api.post('/api/donations', formData);
+            setSuccess('Thank you for your donation! It has been successfully listed.');
+            setFormData({
+                title: '',
+                quantity: '',
+                location: '',
+                expiryDate: '',
+                donorPhone: '',
+                description: ''
+            });
+        } catch (err) {
+            setError(err.response?.data?.msg || 'Failed to submit donation. Please make sure you are logged in.');
+        }
     };
 
     return (
@@ -32,17 +49,31 @@ const Donate = () => {
                 </div>
 
                 <div style={{ maxWidth: '600px', margin: '0 auto', background: 'white', padding: '40px', borderRadius: '20px', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }}>
+                    {error && <p style={{ color: 'red', textAlign: 'center', marginBottom: '15px' }}>{error}</p>}
+                    {success && <p style={{ color: 'green', textAlign: 'center', marginBottom: '15px' }}>{success}</p>}
+                    
                     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                         <div>
-                            <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>Food Type / Name</label>
+                            <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>Food Type / Title</label>
                             <input
                                 type="text"
-                                name="foodType"
-                                value={formData.foodType}
+                                name="title"
+                                value={formData.title}
                                 onChange={handleChange}
                                 placeholder="e.g. Rice and Curry, Bread..."
                                 style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #ddd' }}
                                 required
+                            />
+                        </div>
+                        <div>
+                            <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>Description</label>
+                            <input
+                                type="text"
+                                name="description"
+                                value={formData.description}
+                                onChange={handleChange}
+                                placeholder="Any additional details..."
+                                style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #ddd' }}
                             />
                         </div>
                         <div>
@@ -73,8 +104,8 @@ const Donate = () => {
                             <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>Fresh Until</label>
                             <input
                                 type="datetime-local"
-                                name="expiryTime"
-                                value={formData.expiryTime}
+                                name="expiryDate"
+                                value={formData.expiryDate}
                                 onChange={handleChange}
                                 style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #ddd' }}
                                 required
@@ -84,8 +115,8 @@ const Donate = () => {
                             <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>Contact Number</label>
                             <input
                                 type="tel"
-                                name="contact"
-                                value={formData.contact}
+                                name="donorPhone"
+                                value={formData.donorPhone}
                                 onChange={handleChange}
                                 placeholder="+91..."
                                 style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #ddd' }}

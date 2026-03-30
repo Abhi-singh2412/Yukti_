@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import api from '../api';
 
 const RequestFood = () => {
     const [formData, setFormData] = useState({
@@ -11,6 +12,8 @@ const RequestFood = () => {
         requesterPhone: '',
         imageUrl: ''
     });
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -18,10 +21,11 @@ const RequestFood = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setError('');
+        setSuccess('');
         try {
-            // For now just simulate an API call
-            console.log('Request submitted:', formData);
-            alert('Your food request has been submitted successfully!');
+            await api.post('/api/requests', formData);
+            setSuccess('Your food request has been submitted successfully!');
             setFormData({
                 title: '',
                 description: '',
@@ -30,9 +34,8 @@ const RequestFood = () => {
                 requesterPhone: '',
                 imageUrl: ''
             });
-        } catch (error) {
-            console.error(error);
-            alert('Error submitting request');
+        } catch (err) {
+            setError(err.response?.data?.msg || 'Error submitting request. Please try again.');
         }
     };
 
@@ -46,6 +49,9 @@ const RequestFood = () => {
                 </div>
 
                 <div style={{ maxWidth: '600px', margin: '0 auto', background: 'white', padding: '40px', borderRadius: '20px', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }}>
+                    {error && <p style={{ color: 'red', textAlign: 'center', marginBottom: '15px' }}>{error}</p>}
+                    {success && <p style={{ color: 'green', textAlign: 'center', marginBottom: '15px' }}>{success}</p>}
+
                     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                         <div>
                             <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>Request Title</label>
